@@ -34,7 +34,7 @@ class btb_table_t {
         btb_row_t table[ENTRIES*COLS];
 
         void create_btb_table();
-        bool is_in_btb(uint64_t pc, uint64_t cycles);
-        void create_btb_row(btb_row_t *row, uint64_t pc, uint32_t size, uint64_t cycles);
-        void insert_btb_value(uint64_t pc, uint32_t size, uint64_t cycles);
+        bool is_in_btb(uint64_t pc);
+        void create_btb_row(btb_row_t *row, uint64_t pc, uint32_t size);
+        void insert_btb_value(uint64_t pc, uint32_t size);
 };

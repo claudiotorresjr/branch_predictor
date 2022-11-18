@@ -1,0 +1,18 @@
+traces/astar/astar.CINT.PP200M.tid0.stat.out.gz
+PCs totais: 759 / PCs unicos: 566
+
+traces/calculix/calculix.CFP.PP200M.tid0.stat.out.gz
+PCs totais: 432 / PCs unicos: 312
+
+traces/dealII/dealII.CFP.PP200M.tid0.stat.out.gz
+PCs totais: 7332 / PCs unicos: 5695
+
+traces/gromacs/gromacs.CFP.PP200M.tid0.stat.out.gz
+PCs totais: 1876 / PCs unicos: 1286
+
+traces/libquantum/libquantum.CINT.PP200M.tid0.stat.out.gz
+PCs totais: 75 / PCs unicos: 62
+
+traces/namd/namd.CFP.PP200M.tid0.stat.out.gz
+PCs totais: 1585 / PCs unicos: 1320
+
