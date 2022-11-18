@@ -1,0 +1,29 @@
+Results for --astar--
+fetch_instructions:200001517
+BTB_HIT: 37208459
+BTB_MISS: 512
+
+Results for --calculix--
+fetch_instructions:200001551
+BTB_HIT: 3926596
+BTB_MISS: 253
+
+Results for --dealII--
+fetch_instructions:200001503
+BTB_HIT: 31817975
+BTB_MISS: 6159
+
+Results for --gromacs--
+fetch_instructions:200001492
+BTB_HIT: 5077244
+BTB_MISS: 1148
+
+Results for --libquantum--
+fetch_instructions:200001503
+BTB_HIT: 34952067
+BTB_MISS: 58
+
+Results for --namd--
+fetch_instructions:200001502
+BTB_HIT: 36627388
+BTB_MISS: 1077
