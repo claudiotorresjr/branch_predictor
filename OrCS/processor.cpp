@@ -4,16 +4,74 @@ btb_table_t btb_table;
 opcode_package_t last_instruction;
 uint64_t total_branches = 0;
 bool op_branch = false;
+uint64_t right_predict = 0;
+uint64_t wrong_predict = 0;
+uint64_t total_taken = 0;
+uint64_t total_ntaken = 0;
+int prediction_type;
+bool predicted;
+
+PiecewiseLinearPredictor plp;
+
 
 inline uint64_t btb_idx(uint64_t pc) {
 	return (pc & 1023);
+}
+
+void predict(uint64_t pc) {
+	uint64_t idx = btb_idx(pc);
+	//output is initialized to bias weight
+	plp.output = plp.weight[idx][0][0];
+	// //sum weights (or their negations) chosen using
+	// //the addresses of the last GHL branches
+	for (int i = 0 ; i < HIST_LENGTH && plp.GA[i] != 0; i++)
+    {
+		//if taken
+        if (plp.GHR[i] == true) {
+            plp.output += plp.weight[idx][plp.GA[i]][i+1];
+		}
+        else {
+            plp.output -= plp.weight[idx][plp.GA[i]][i+1];
+		}
+    }
+	predicted = true ? (plp.output >= 0) : false;
+}
+
+void update(bool taken, uint64_t pc) {
+	uint64_t idx = btb_idx(pc);
+
+	if (abs(plp.output) < 0 || (plp.output >= 0 && predicted != taken))
+	{
+		if (taken) {
+			plp.weight[idx][0][0] += 1;
+		}
+		else {
+			plp.weight[idx][0][0] -= 1;
+		}
+
+		for (int i = 0 ; i < HIST_LENGTH ; i++) {
+			if (plp.GHR[i] == taken) {
+				plp.weight[idx][plp.GA[i]][i+1] += 1;
+			}
+			else {
+				plp.weight[idx][plp.GA[i]][i+1] += 1;
+			}
+   		}
+	}
+
+    for (int i = HIST_LENGTH - 1 ; i > 0 ; i--) {
+		plp.GA[i] = plp.GA[i-1];
+		plp.GHR[i] = plp.GHR[i-1];
+	}
+    plp.GA[0] = pc;
+    plp.GHR[0] = taken;
 }
 
 void btb_table_t::create_btb_table() {
 	for(int i = 0; i < ENTRIES*COLS; ++i) {
 		this->table[i].pc_address = -1LU;
 		this->table[i].pc_size = 0;
-		this->table[i].bht = 0;
+		this->table[i].bht = START_BHT;
 		this->table[i].lru = 0;
 	}
 	this->clock_penalty = 0;
@@ -22,9 +80,10 @@ void btb_table_t::create_btb_table() {
 }
 
 bool btb_table_t::is_in_btb(uint64_t pc) {
+	uint64_t idx = btb_idx(pc)*COLS;
 	for(int i = 0; i < COLS; ++i) {
-		if (this->table[btb_idx(pc)*COLS + i].pc_address == pc) {
-			this->table[btb_idx(pc)*COLS + i].lru = orcs_engine.get_global_cycle();
+		if (this->table[idx + i].pc_address == pc) {
+			this->table[idx + i].lru = orcs_engine.get_global_cycle();
 			return true;
 		}
 	}
@@ -35,26 +94,109 @@ void btb_table_t::create_btb_row(btb_row_t *row, uint64_t pc, uint32_t size) {
 	row->pc_address = pc;
 	row->pc_size = size;
 	row->lru = orcs_engine.get_global_cycle();
-	row->bht = 0;
+	row->bht = START_BHT;
 }
 
 void btb_table_t::insert_btb_value(uint64_t pc, uint32_t size) {
 	uint64_t lru = orcs_engine.get_global_cycle();
 	uint64_t min_idx = 0;
+	uint64_t idx = btb_idx(pc)*COLS;
 	for(int i = 0; i < COLS; ++i) {
 		//check if this position is empty. if yes, can save directly
-		if (this->table[btb_idx(pc)*COLS + i].pc_address == -1LU) {
-			create_btb_row(&(this->table[btb_idx(pc)*COLS + i]), pc, size);
+		if (this->table[idx + i].pc_address == -1LU) {
+			create_btb_row(&(this->table[idx + i]), pc, size);
 			return;
 		//if not empty, check the pc cycle (when that pc was saved) and save the minimal cycle (the older)
-		} else if (this->table[btb_idx(pc)*COLS + i].lru <= lru) {
-			lru = this->table[btb_idx(pc)*COLS + i].lru;
-			min_idx = btb_idx(pc)*COLS + i;
+		} else if (this->table[idx + i].lru <= lru) {
+			lru = this->table[idx + i].lru;
+			min_idx = idx + i;
 		}
 	}
 	this->table[min_idx].pc_address = pc;
 	this->table[min_idx].pc_size = size;
 	this->table[min_idx].lru = orcs_engine.get_global_cycle();
+}
+
+int branch_predictor_2bc(opcode_package_t instruction) {
+	uint64_t idx = btb_idx(instruction.opcode_address)*COLS;
+	for(int i = 0; i < COLS; ++i) {
+		if (btb_table.table[idx + i].pc_address == instruction.opcode_address) {
+			//if bht indicates taken, update with the pc_size and update the status
+			if (btb_table.table[idx + i].bht == 2 || btb_table.table[idx + i].bht == 3) {
+				return TAKEN;
+			}
+		}
+	}
+	return NTAKEN;
+}
+
+void btb_table_t::update_bht(uint64_t idx, bool taken) {
+	if (!taken)
+	{
+		if (this->table[idx].bht > 0) {
+			this->table[idx].bht -= 1;
+		}
+	}
+	else
+	{
+		if (this->table[idx].bht < 3) {
+			this->table[idx].bht += 1;
+		}
+	}
+}
+
+void check_prediction_2bc(uint64_t idx, uint64_t current_pc) {
+	// check if was not-taken
+	//if current pc is the pc target (last_instruction pc + pc size)
+	if (current_pc == (last_instruction.opcode_address + last_instruction.opcode_size)) {
+		total_ntaken++;
+		//check if we predicted right
+		if (prediction_type == NTAKEN) {
+			right_predict++;
+		} else {
+			wrong_predict++;
+		}
+		btb_table.update_bht(idx, false);
+		
+	//check if was taken
+	} else {
+		total_taken++;
+		//check if we predicted right
+		if (prediction_type == TAKEN) {
+			right_predict++;
+		} else {
+			wrong_predict++;
+		}
+		btb_table.update_bht(idx, true);
+	}
+}
+
+void check_prediction_piece_linear(uint64_t current_pc) {
+	bool taken;
+	// check if was not-taken
+	//if current pc is the pc target (last_instruction pc + pc size)
+	if (current_pc == (last_instruction.opcode_address + last_instruction.opcode_size)) {
+		total_ntaken++;
+		taken = false;
+		//check if we predicted right
+		if (!predicted) {
+			right_predict++;
+		} else {
+			wrong_predict++;
+		}
+	//check if was taken
+	} else {
+		total_taken++;
+		taken = true;
+		//check if we predicted right
+		if (predicted) {
+			right_predict++;
+		} else {
+			wrong_predict++;
+		}
+	}
+	taken = !taken;
+	// update(taken, current_pc);
 }
 
 // =====================================================================
@@ -65,6 +207,21 @@ processor_t::processor_t() {
 // =====================================================================
 void processor_t::allocate() {
 	btb_table.create_btb_table();
+	for (int i = 0; i < HIST_LENGTH; ++i) {
+		plp.GA[i] = 0;
+		plp.GHR[i] = 0;
+	}
+
+	// weight[ADDR_RANGE][GA_RANGE][HIST_LENGTH + 1]
+	for (int i = 0; i < ADDR_RANGE; ++i) {
+		for (int j = 0; j < GA_RANGE; ++j)
+		{
+			for (int k = 0; k < HIST_LENGTH + 1; ++k)
+			{
+				plp.weight[i][j][k] = 0;
+			}
+		}
+	}
 };
 
 // =====================================================================
@@ -76,21 +233,15 @@ void processor_t::clock() {
 		orcs_engine.simulator_alive = false;
 	}
 
-	//if last instruction was a branch, now we are sure of the branch path
-	//(if it was taken or not taken)
+	//if last instruction was a branch, now we are sure of the branch path (if it was taken or not taken)
 	if (op_branch) {
 		op_branch = false;
-		uint64_t old_pc = last_instruction.opcode_address;
-		uint32_t old_size = last_instruction.opcode_size;
+		uint64_t idx = btb_idx(last_instruction.opcode_address)*COLS;
 		for(int i = 0; i < COLS; ++i) {
-			if (btb_table.table[btb_idx(old_pc)*COLS + i].pc_address == old_pc) {
-				//check if the branch was not taken (current pc == old pc + old pc size)
-				if (new_instruction.opcode_address == old_pc + old_size) {
-					//btb_table.table[btb_idx(old_pc)*COLS + i].bht = 
-				// check if was taken
-				} else {
-
-				}
+			if (last_instruction.branch_type == BRANCH_COND && btb_table.table[idx + i].pc_address == last_instruction.opcode_address) {
+				// check_prediction_2bc(idx + i, new_instruction.opcode_address);
+				check_prediction_piece_linear(new_instruction.opcode_address);
+				break;
 			}
 		}
 	}
@@ -99,11 +250,15 @@ void processor_t::clock() {
 	if (new_instruction.opcode_operation == INSTRUCTION_OPERATION_BRANCH) {
 		total_branches++;
 		op_branch = true;
+
 		//save the current instruction to check in the next operation (next clock).
 		last_instruction = new_instruction;
 		//check if pc code is in BTB table
 		if (btb_table.is_in_btb(new_instruction.opcode_address)) {
 			btb_table.hit++;
+			// prediction_type = branch_predictor_2bc(new_instruction);
+			predict(new_instruction.opcode_address);
+
 		} else {
 			btb_table.miss++;
 			//insert this pc code and needed information on BTB
@@ -117,6 +272,10 @@ void processor_t::statistics() {
 	// ORCS_PRINTF("######################################################\n");
 	// ORCS_PRINTF("processor_t\n");
     ORCS_PRINTF("BTB_HIT: %d\n", btb_table.hit);
-    ORCS_PRINTF("BTB_MISS: %d\n", btb_table.miss);
+    ORCS_PRINTF("BTB_MISS: %d\n\n", btb_table.miss);
+    ORCS_PRINTF("total taken: %ld\n", total_taken);
+    ORCS_PRINTF("total not-taken: %ld\n", total_ntaken);
+    ORCS_PRINTF("right predict: %ld\n", right_predict);
+    ORCS_PRINTF("wrong predict: %ld\n\n", wrong_predict);
     ORCS_PRINTF("Total branches: %ld\n", total_branches);
 };
