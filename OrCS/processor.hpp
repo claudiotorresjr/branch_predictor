@@ -2,12 +2,17 @@
 // ============================================================================
 
 #include <cmath>
+#include <time.h>
 
+/*-----Defines for the BTB and two bit counter-----*/
+/*-------------------------------------------------*/
+#define BTB_ON 1
 #define ENTRIES 1024
 #define COLS 4
-#define START_BHT 1
+#define START_BHT 3
 #define TAKEN 1
 #define NTAKEN 0
+/*-------------------------------------------------*/
 
 
 #define HIST_LENGTH 20
@@ -41,8 +46,9 @@ class btb_row_t {
 
 class btb_table_t {
     public:
-        uint8_t clock_penalty;
         uint32_t hit, miss;
+        uint64_t total_taken, total_ntaken;
+        uint64_t right_predict, wrong_predict;
         btb_row_t table[ENTRIES*COLS];
 
         void create_btb_table();
@@ -53,16 +59,21 @@ class btb_table_t {
 };
 
 
-class PiecewiseLinearPredictor {
+class piecewise_linear_predictor_t {
     public:
+        uint64_t total_taken, total_ntaken;
+        uint64_t right_predict, wrong_predict;
         bool GHR[HIST_LENGTH]; //true is taken and false is not taken
         uint64_t GA[HIST_LENGTH];
         int output;
         int weight[ADDR_RANGE][GA_RANGE][HIST_LENGTH + 1];
+
+        void creat_piecewise_instance();
+        void predict(uint64_t pc);
+        void update_weights_original(bool taken, uint64_t pc);
+        void update_weights_modified(bool taken, uint64_t pc);
 };
 
-bool predict(uint64_t pc);
-void update_weights(bool taken, uint64_t pc);
 int branch_predictor_2bc(opcode_package_t instruction);
 void check_prediction_2b(uint64_t idx, uint64_t current_pc);
 bool check_prediction_piece_linear(uint64_t current_pc);

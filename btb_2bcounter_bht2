@@ -1,0 +1,126 @@
+astar
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001517
+-----Statistics for BTB and 21 bit counter-----
+BTB hits: 37208459
+BTB misses: 512
+
+Total taken: 12427197
+Total not-taken: 18404580
+
+Right predict: 24147543
+Wrong predict: 6684234
+
+Percentage: 78.3203% 
+Total branches: 37208971
+Total time: 23s
+-------------------------------------------------------
+
+calculix
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001551
+-----Statistics for BTB and 21 bit counter-----
+BTB hits: 3926596
+BTB misses: 253
+
+Total taken: 2490894
+Total not-taken: 1071263
+
+Right predict: 2805977
+Wrong predict: 756180
+
+Percentage: 78.7719% 
+Total branches: 3926849
+Total time: 17s
+-------------------------------------------------------
+
+dealII
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001503
+-----Statistics for BTB and 21 bit counter-----
+BTB hits: 31818312
+BTB misses: 5822
+
+Total taken: 9443354
+Total not-taken: 12279771
+
+Right predict: 20506086
+Wrong predict: 1217039
+
+Percentage: 94.3975% 
+Total branches: 31824134
+Total time: 24s
+-------------------------------------------------------
+
+gromacs
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001492
+-----Statistics for BTB and 21 bit counter-----
+BTB hits: 5077244
+BTB misses: 1148
+
+Total taken: 2177145
+Total not-taken: 2553444
+
+Right predict: 4228988
+Wrong predict: 501601
+
+Percentage: 89.3967% 
+Total branches: 5078392
+Total time: 21s
+-------------------------------------------------------
+
+libquantum
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001503
+-----Statistics for BTB and 21 bit counter-----
+BTB hits: 34952067
+BTB misses: 58
+
+Total taken: 32596870
+Total not-taken: 2355154
+
+Right predict: 33368540
+Wrong predict: 1583484
+
+Percentage: 95.4696% 
+Total branches: 34952125
+Total time: 19s
+-------------------------------------------------------
+
+namd
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001502
+-----Statistics for BTB and 21 bit counter-----
+BTB hits: 36627388
+BTB misses: 1077
+
+Total taken: 12305259
+Total not-taken: 16778949
+
+Right predict: 27226602
+Wrong predict: 1857606
+
+Percentage: 93.6130% 
+Total branches: 36628465
+Total time: 22s
+-------------------------------------------------------
+
