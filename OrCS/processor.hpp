@@ -1,6 +1,8 @@
 // ============================================================================
 // ============================================================================
 
+#include <cmath>
+
 #define ENTRIES 1024
 #define COLS 4
 #define START_BHT 1
@@ -9,7 +11,7 @@
 
 
 #define HIST_LENGTH 20
-#define ADDR_RANGE 1024 //Value of N
+#define ADDR_RANGE 256 //Value of N
 #define GA_RANGE 256 //Value of M
 
 #define WEIGHT_WIDTH 8
@@ -59,8 +61,8 @@ class PiecewiseLinearPredictor {
         int weight[ADDR_RANGE][GA_RANGE][HIST_LENGTH + 1];
 };
 
-void predict(uint64_t pc);
-void update(bool taken, uint64_t pc);
+bool predict(uint64_t pc);
+void update_weights(bool taken, uint64_t pc);
 int branch_predictor_2bc(opcode_package_t instruction);
 void check_prediction_2b(uint64_t idx, uint64_t current_pc);
-void check_prediction_piece_linear(uint64_t current_pc);
+bool check_prediction_piece_linear(uint64_t current_pc);
