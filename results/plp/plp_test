@@ -1,0 +1,108 @@
+astar
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001517
+-----Statistics for Piecewise Linear Branch Prediction------
+Total taken: 12427197
+Total not-taken: 18404580
+
+Right predict: 25038177
+Wrong predict: 5793600
+
+Percentage: 81.2090% 
+Total branches: 37208971
+Total time: 23s
+-------------------------------------------------------
+
+calculix
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001551
+-----Statistics for Piecewise Linear Branch Prediction------
+Total taken: 2490894
+Total not-taken: 1071263
+
+Right predict: 2804205
+Wrong predict: 757952
+
+Percentage: 78.7221% 
+Total branches: 3926849
+Total time: 17s
+-------------------------------------------------------
+
+dealII
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001503
+-----Statistics for Piecewise Linear Branch Prediction------
+Total taken: 9443354
+Total not-taken: 12279771
+
+Right predict: 20598237
+Wrong predict: 1124888
+
+Percentage: 94.8217% 
+Total branches: 31824134
+Total time: 25s
+-------------------------------------------------------
+
+gromacs
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001492
+-----Statistics for Piecewise Linear Branch Prediction------
+Total taken: 2177145
+Total not-taken: 2553444
+
+Right predict: 4269759
+Wrong predict: 460830
+
+Percentage: 90.2585% 
+Total branches: 5078392
+Total time: 20s
+-------------------------------------------------------
+
+libquantum
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001503
+-----Statistics for Piecewise Linear Branch Prediction------
+Total taken: 32596870
+Total not-taken: 2355154
+
+Right predict: 33638097
+Wrong predict: 1313927
+
+Percentage: 96.2408% 
+Total branches: 34952125
+Total time: 20s
+-------------------------------------------------------
+
+namd
+End of dynamic simulation trace
+End of Simulation
+######################################################
+trace_reader_t
+fetch_instructions:200001502
+-----Statistics for Piecewise Linear Branch Prediction------
+Total taken: 12305259
+Total not-taken: 16778949
+
+Right predict: 27358734
+Wrong predict: 1725474
+
+Percentage: 94.0673% 
+Total branches: 36628465
+Total time: 23s
+-------------------------------------------------------
+

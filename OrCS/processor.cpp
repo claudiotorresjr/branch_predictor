@@ -192,8 +192,8 @@ void check_prediction_2bc(uint64_t idx, uint64_t current_pc) {
 		} else {
 			btb_table.wrong_dir_predict++;
 			clock_penalty = 16;
-		btb_table.update_bht(idx, false);
 		}
+		btb_table.update_bht(idx, false);
 		
 	//check if was taken
 	} else {
@@ -204,8 +204,8 @@ void check_prediction_2bc(uint64_t idx, uint64_t current_pc) {
 		} else {
 			btb_table.wrong_dir_predict++;
 			clock_penalty = 16;
-		btb_table.update_bht(idx, true);
 		}
+		btb_table.update_bht(idx, true);
 	}
 }
 
@@ -258,7 +258,7 @@ void processor_t::allocate() {
 void processor_t::clock() {
 	/// Get the next instruction from the trace
 	opcode_package_t new_instruction;
-	if (clock_penalty != 0) {
+	if (clock_penalty > 0) {
 		clock_penalty--;
 		return;
 	}
@@ -270,7 +270,7 @@ void processor_t::clock() {
 	}
 
 	//if last instruction was a branch, now we are sure of the branch path (if it was taken or not taken)
-	if (op_branch) {
+	if (op_branch && last_instruction.branch_type == BRANCH_COND) {
 		op_branch = false;
 
 		/*-----This block is for the BTB and two bit counter-----*/
@@ -278,7 +278,7 @@ void processor_t::clock() {
 		{
 			uint64_t idx = btb_idx(last_instruction.opcode_address)*COLS;
 			for(int i = 0; i < COLS; ++i) {
-				if (last_instruction.branch_type == BRANCH_COND && btb_table.table[idx + i].pc_address == last_instruction.opcode_address) {
+				if (btb_table.table[idx + i].pc_address == last_instruction.opcode_address) {
 					cond++;
 					check_prediction_2bc(idx + i, new_instruction.opcode_address);
 					break;
@@ -286,10 +286,8 @@ void processor_t::clock() {
 			}
 		/*-----This block is for the Piecewise Linear Branch Prediction-----*/
 		} else {
-			if (last_instruction.branch_type == BRANCH_COND) {
-				bool taken = check_prediction_piece_linear(new_instruction.opcode_address);
-				plp.update_weights_original(taken, last_instruction.opcode_address);
-			}
+			bool taken = check_prediction_piece_linear(new_instruction.opcode_address);
+			plp.update_weights_original(taken, last_instruction.opcode_address);
 		}
 
 
@@ -327,8 +325,8 @@ void processor_t::clock() {
 
 // =====================================================================
 void processor_t::statistics() {
-	// ORCS_PRINTF("######################################################\n");
-	// ORCS_PRINTF("processor_t\n");
+	ORCS_PRINTF("######################################################\n");
+	ORCS_PRINTF("processor_t\n");
 	/*-----This block is for the BTB and two bit counter-----*/
 	/*-------------------------------------------------------*/
 	if (BTB_ON)
@@ -338,7 +336,7 @@ void processor_t::statistics() {
 		ORCS_PRINTF("BTB misses: %d\n\n", btb_table.miss);
 		ORCS_PRINTF("Total taken: %ld\n", btb_table.total_taken);
 		ORCS_PRINTF("Total not-taken: %ld\n\n", btb_table.total_ntaken);
-		ORCS_PRINTF("Total conditional: %ld\n\n", cond);
+		// ORCS_PRINTF("Total conditional: %ld\n\n", cond);
 		ORCS_PRINTF("Right predict: %ld\n", btb_table.right_dir_predict);
 		ORCS_PRINTF("Wrong predict: %ld\n\n", btb_table.wrong_dir_predict);
 		printf("Percentage: %.4f%% \n", ((float)btb_table.right_dir_predict/(btb_table.total_taken+btb_table.total_ntaken))*100);
@@ -346,10 +344,12 @@ void processor_t::statistics() {
 		ORCS_PRINTF("-----Statistics for Piecewise Linear Branch Prediction------\n");
 		ORCS_PRINTF("Total taken: %ld\n", plp.total_taken);
 		ORCS_PRINTF("Total not-taken: %ld\n\n", plp.total_ntaken);
-		ORCS_PRINTF("Total conditional: %ld\n\n", cond);
+		// ORCS_PRINTF("Total conditional: %ld\n\n", cond);
 		ORCS_PRINTF("Right predict: %ld\n", plp.right_dir_predict);
 		ORCS_PRINTF("Wrong predict: %ld\n\n", plp.wrong_dir_predict);
 		printf("Percentage: %.4f%% \n", ((float)plp.right_dir_predict/(plp.total_taken+plp.total_ntaken))*100);
+
+		// printf("%.4f,%ld\n", ((float)plp.right_dir_predict/(plp.total_taken+plp.total_ntaken))*100, (end - begin));
 
 	}
 

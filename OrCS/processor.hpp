@@ -6,7 +6,7 @@
 
 /*-----Defines for the BTB and two bit counter-----*/
 /*-------------------------------------------------*/
-#define BTB_ON 1
+#define BTB_ON 0
 #define ENTRIES 1024
 #define COLS 4
 #define START_BHT 1
@@ -14,10 +14,11 @@
 #define NTAKEN 0
 /*-------------------------------------------------*/
 
-
-#define GH_LENGTH 20
-#define ADDR_RANGE 256 //Value of N
-#define GA_RANGE 256 //Value of M
+#define GH_LENGTH 5
+//Value of N
+#define ADDR_RANGE 1024
+//Value of M
+#define GA_RANGE 4
 
 class processor_t {
     private:    
